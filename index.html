@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vought International — Portal do Cidadão</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg-deep:#0a0e14;
+  --bg-panel:#141a24;
+  --bg-panel-2:#1a2230;
+  --line:#2c3646;
+  --line-soft:#202938;
+  --text-bone:#e8e6e1;
+  --text-dim:#8b94a3;
+  --vought-red:#c41e3a;
+  --vought-red-dim:#7a1424;
+  --vought-gold:#d4af37;
+  --green-ok:#3ecf8e;
+  --shadow:0 20px 60px rgba(0,0,0,.55);
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(ellipse at 20% -10%, rgba(196,30,58,.10), transparent 55%),
+    radial-gradient(ellipse at 100% 110%, rgba(212,175,55,.06), transparent 50%),
+    var(--bg-deep);
+  font-family:'Inter', sans-serif;
+  color:var(--text-bone);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  overflow-x:hidden;
+}
+
+/* ---------- ambient noise / scanlines ---------- */
+.noise-overlay{
+  position:fixed; inset:0; pointer-events:none; z-index:5;
+  background-image:repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0px, rgba(255,255,255,.012) 1px, transparent 1px, transparent 3px);
+  mix-blend-mode:overlay;
+}
+
+.bg-grid{
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(196,30,58,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(196,30,58,.05) 1px, transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse 70% 60% at 50% 40%, black, transparent 80%);
+}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:fixed; top:0; left:0; right:0; z-index:20;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 28px;
+  background:linear-gradient(180deg, rgba(10,14,20,.9), transparent);
+}
+.vought-mark{
+  display:flex; align-items:center; gap:10px;
+  user-select:none;
+}
+.vought-shield{
+  width:34px; height:38px; flex-shrink:0;
+}
+.vought-wordmark{
+  font-family:'Bebas Neue', sans-serif;
+  font-size:21px;
+  letter-spacing:1.5px;
+  color:var(--text-bone);
+  line-height:1;
+}
+.vought-wordmark span{ color:var(--vought-red); }
+.vought-sub{
+  font-family:'Inter',sans-serif;
+  font-size:9.5px;
+  letter-spacing:3px;
+  color:var(--text-dim);
+  text-transform:uppercase;
+  margin-top:2px;
+}
+.topbar-right{
+  font-size:11px; letter-spacing:1.5px; color:var(--text-dim);
+  text-transform:uppercase; display:flex; align-items:center; gap:8px;
+}
+.live-dot{
+  width:7px; height:7px; border-radius:50%; background:var(--vought-red);
+  box-shadow:0 0 8px var(--vought-red);
+  animation:pulse-dot 1.6s infinite;
+}
+@keyframes pulse-dot{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+/* ---------- main card ---------- */
+.stage{
+  position:relative; z-index:10;
+  width:100%; max-width:430px;
+  margin:90px 20px 40px;
+}
+.login-card{
+  background:linear-gradient(160deg, var(--bg-panel) 0%, var(--bg-panel-2) 100%);
+  border:1px solid var(--line);
+  border-radius:6px;
+  box-shadow:var(--shadow);
+  padding:38px 34px 30px;
+  position:relative;
+  overflow:hidden;
+  animation:rise .7s cubic-bezier(.16,1,.3,1) both;
+}
+.login-card::before{
+  content:"";
+  position:absolute; top:0; left:0; right:0; height:3px;
+  background:linear-gradient(90deg, var(--vought-red), var(--vought-gold), var(--vought-red));
+  background-size:200% 100%;
+  animation:shimmer 5s linear infinite;
+}
+@keyframes shimmer{ to{ background-position:200% 0; } }
+@keyframes rise{
+  from{ opacity:0; transform:translateY(24px) scale(.98); }
+  to{ opacity:1; transform:translateY(0) scale(1); }
+}
+
+.card-eyebrow{
+  font-size:10.5px; letter-spacing:3px; color:var(--vought-red);
+  text-transform:uppercase; font-weight:700; text-align:center;
+  margin-bottom:8px;
+}
+.card-title{
+  font-family:'Bebas Neue', sans-serif;
+  font-size:30px; letter-spacing:1px; text-align:center;
+  color:var(--text-bone); margin:0 0 4px;
+}
+.card-desc{
+  text-align:center; font-size:12.5px; color:var(--text-dim);
+  margin:0 0 26px; line-height:1.5;
+}
+
+.field{ margin-bottom:16px; }
+.field label{
+  display:block; font-size:10.5px; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--text-dim); margin-bottom:7px; font-weight:600;
+}
+.field input{
+  width:100%; padding:12px 14px;
+  background:rgba(0,0,0,.28);
+  border:1px solid var(--line);
+  border-radius:4px;
+  color:var(--text-bone);
+  font-size:14px; font-family:'Inter',sans-serif;
+  outline:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+.field input::placeholder{ color:#4a5568; }
+.field input:focus{
+  border-color:var(--vought-red);
+  box-shadow:0 0 0 3px rgba(196,30,58,.15);
+}
+
+.row-between{
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:20px; font-size:12px;
+}
+.row-between a{ color:var(--vought-gold); text-decoration:none; }
+.row-between a:hover{ text-decoration:underline; }
+.remember{ display:flex; align-items:center; gap:7px; color:var(--text-dim); }
+.remember input{ accent-color:var(--vought-red); }
+
+/* ---------- captcha box ---------- */
+.captcha-box{
+  display:flex; align-items:center; gap:14px;
+  background:rgba(0,0,0,.28);
+  border:1px solid var(--line);
+  border-radius:4px;
+  padding:13px 16px;
+  margin-bottom:22px;
+  cursor:pointer;
+  transition:border-color .2s, background .2s;
+  user-select:none;
+}
+.captcha-box:hover{ border-color:#3a4658; background:rgba(0,0,0,.38); }
+.captcha-box.verified{ border-color:var(--green-ok); background:rgba(62,207,142,.06); }
+
+.captcha-checkbox{
+  width:24px; height:24px; flex-shrink:0;
+  border:2px solid var(--text-dim);
+  border-radius:4px;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .25s;
+  position:relative;
+}
+.captcha-box.loading .captcha-checkbox{ border-color:var(--vought-gold); }
+.captcha-box.verified .captcha-checkbox{
+  border-color:var(--green-ok); background:var(--green-ok);
+}
+.captcha-checkbox svg{ width:15px; height:15px; opacity:0; transition:opacity .2s; }
+.captcha-box.verified .captcha-checkbox svg{ opacity:1; }
+
+.spinner{
+  width:16px; height:16px; border-radius:50%;
+  border:2px solid rgba(212,175,55,.25); border-top-color:var(--vought-gold);
+  animation:spin .7s linear infinite; display:none;
+}
+.captcha-box.loading .spinner{ display:block; }
+.captcha-box.loading .captcha-checkbox{ display:none; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+
+.captcha-text{ flex:1; }
+.captcha-text .ct-main{ font-size:13.5px; font-weight:600; color:var(--text-bone); }
+.captcha-text .ct-sub{ font-size:10.5px; color:var(--text-dim); margin-top:1px; }
+.captcha-logo{
+  font-family:'Bebas Neue'; font-size:9px; letter-spacing:1px;
+  color:var(--text-dim); text-align:right; line-height:1.3;
+}
+.captcha-logo b{ color:var(--vought-red); display:block; font-size:11px; letter-spacing:1px; }
+
+.btn-primary{
+  width:100%; padding:14px;
+  background:linear-gradient(180deg, var(--vought-red), #9d1830);
+  border:none; border-radius:4px;
+  color:#fff; font-family:'Oswald',sans-serif; font-weight:600;
+  font-size:14px; letter-spacing:1.5px; text-transform:uppercase;
+  cursor:pointer;
+  box-shadow:0 6px 18px rgba(196,30,58,.3);
+  transition:transform .15s, box-shadow .15s, filter .15s;
+}
+.btn-primary:hover{ filter:brightness(1.08); transform:translateY(-1px); box-shadow:0 8px 22px rgba(196,30,58,.4); }
+.btn-primary:active{ transform:translateY(0); }
+.btn-primary:disabled{ opacity:.45; cursor:not-allowed; filter:none; transform:none; }
+
+.card-footer-note{
+  text-align:center; font-size:10.5px; color:var(--text-dim);
+  margin-top:18px; line-height:1.6;
+}
+.card-footer-note b{ color:var(--vought-gold); font-weight:600; }
+
+.disclaimer{
+  text-align:center; font-size:9.5px; color:#4a5568;
+  margin-top:18px; line-height:1.7; letter-spacing:.3px;
+}
+
+/* ---------- shake ---------- */
+.shake{ animation:shakeAnim .4s; }
+@keyframes shakeAnim{
+  0%,100%{ transform:translateX(0); }
+  20%{ transform:translateX(-8px); }
+  40%{ transform:translateX(7px); }
+  60%{ transform:translateX(-5px); }
+  80%{ transform:translateX(3px); }
+}
+
+/* ================= QUIZ MODAL ================= */
+.modal-overlay{
+  position:fixed; inset:0; z-index:100;
+  background:rgba(4,6,10,.86);
+  backdrop-filter:blur(4px);
+  display:none;
+  align-items:center; justify-content:center;
+  padding:20px;
+}
+.modal-overlay.open{ display:flex; animation:fadeIn .25s; }
+@keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+
+.quiz-card{
+  width:100%; max-width:480px;
+  background:linear-gradient(160deg, var(--bg-panel) 0%, #10141c 100%);
+  border:1px solid var(--line);
+  border-radius:8px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  animation:popIn .35s cubic-bezier(.16,1,.3,1) both;
+  position:relative;
+}
+@keyframes popIn{
+  from{ opacity:0; transform:scale(.92) translateY(10px); }
+  to{ opacity:1; transform:scale(1) translateY(0); }
+}
+
+.quiz-head{
+  padding:18px 22px 14px;
+  border-bottom:1px solid var(--line-soft);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.quiz-head-title{
+  font-family:'Bebas Neue'; font-size:17px; letter-spacing:1px; color:var(--text-bone);
+}
+.quiz-head-title span{ color:var(--vought-red); }
+.quiz-progress-label{
+  font-size:10px; letter-spacing:1.5px; color:var(--text-dim); text-transform:uppercase;
+}
+
+.timer-track{
+  height:5px; width:100%; background:var(--line-soft); position:relative; overflow:hidden;
+}
+.timer-fill{
+  position:absolute; left:0; top:0; bottom:0; right:0;
+  background:linear-gradient(90deg, var(--green-ok), var(--vought-gold), var(--vought-red));
+  transform-origin:left center;
+  transform:scaleX(1);
+}
+.timer-fill.running{
+  transition:transform linear;
+}
+.timer-num{
+  position:absolute; top:10px; right:16px;
+  font-family:'Bebas Neue'; font-size:13px; color:var(--text-dim);
+  background:rgba(0,0,0,.4); padding:2px 8px; border-radius:10px;
+  border:1px solid var(--line-soft);
+}
+
+.quiz-body{ padding:24px 22px 22px; }
+
+.q-character-row{
+  display:flex; align-items:center; gap:16px; margin-bottom:18px;
+}
+.q-avatar{
+  width:72px; height:72px; border-radius:8px; flex-shrink:0;
+  border:1px solid var(--line);
+  background:#0d1118;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.02), 0 4px 14px rgba(0,0,0,.4);
+}
+.q-avatar svg{ width:100%; height:100%; display:block; }
+
+.q-text{
+  font-size:15px; font-weight:600; color:var(--text-bone); line-height:1.4;
+}
+.q-text small{
+  display:block; font-size:11px; color:var(--text-dim); font-weight:400; margin-top:4px;
+}
+
+.options{ display:grid; gap:10px; }
+.opt-btn{
+  text-align:left;
+  padding:12px 14px;
+  background:rgba(255,255,255,.02);
+  border:1px solid var(--line);
+  border-radius:5px;
+  color:var(--text-bone);
+  font-size:13.5px; font-family:'Inter',sans-serif;
+  cursor:pointer;
+  transition:border-color .15s, background .15s, transform .1s;
+  display:flex; align-items:center; gap:10px;
+}
+.opt-btn:hover{ border-color:var(--vought-gold); background:rgba(212,175,55,.06); }
+.opt-btn:active{ transform:scale(.985); }
+.opt-letter{
+  width:22px; height:22px; border-radius:4px; flex-shrink:0;
+  background:var(--line-soft); color:var(--text-dim);
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; font-family:'Oswald',sans-serif;
+}
+.opt-btn.correct{ border-color:var(--green-ok); background:rgba(62,207,142,.1); }
+.opt-btn.correct .opt-letter{ background:var(--green-ok); color:#06241a; }
+.opt-btn.wrong{ border-color:var(--vought-red); background:rgba(196,30,58,.1); }
+.opt-btn.wrong .opt-letter{ background:var(--vought-red); color:#fff; }
+.opt-btn.disabled{ pointer-events:none; opacity:.55; }
+.opt-btn.disabled.correct, .opt-btn.disabled.wrong{ opacity:1; }
+
+.feedback-strip{
+  margin-top:14px; padding:10px 12px; border-radius:5px;
+  font-size:12px; font-weight:600; text-align:center;
+  display:none;
+}
+.feedback-strip.show{ display:block; animation:fadeIn .2s; }
+.feedback-strip.ok{ background:rgba(62,207,142,.12); color:var(--green-ok); border:1px solid rgba(62,207,142,.3); }
+.feedback-strip.fail{ background:rgba(196,30,58,.12); color:#ff6b80; border:1px solid rgba(196,30,58,.3); }
+
+/* result screen */
+.result-wrap{ text-align:center; padding:10px 4px 4px; }
+.result-icon{ width:64px; height:64px; margin:0 auto 14px; }
+.result-title{ font-family:'Bebas Neue'; font-size:24px; letter-spacing:1px; margin-bottom:6px; }
+.result-sub{ font-size:13px; color:var(--text-dim); line-height:1.6; margin-bottom:22px; }
+.result-score{
+  font-family:'Bebas Neue'; font-size:42px; letter-spacing:1px; margin-bottom:4px;
+}
+.result-score span{ font-size:20px; color:var(--text-dim); }
+
+.quiz-footer{
+  padding:16px 22px; border-top:1px solid var(--line-soft);
+  display:flex; gap:10px;
+}
+.btn-ghost{
+  flex:1; padding:11px; background:transparent; border:1px solid var(--line);
+  border-radius:5px; color:var(--text-dim); font-size:12.5px; font-weight:600;
+  letter-spacing:.5px; text-transform:uppercase; cursor:pointer; transition:.15s;
+}
+.btn-ghost:hover{ border-color:var(--text-dim); color:var(--text-bone); }
+.btn-solid{
+  flex:1; padding:11px; background:var(--vought-red); border:none;
+  border-radius:5px; color:#fff; font-size:12.5px; font-weight:600;
+  letter-spacing:.5px; text-transform:uppercase; cursor:pointer; transition:.15s;
+}
+.btn-solid:hover{ filter:brightness(1.1); }
+
+@media (max-width:480px){
+  .login-card{ padding:30px 22px 24px; }
+  .stage{ margin-top:80px; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="noise-overlay"></div>
+
+<div class="topbar">
+  <div class="vought-mark">
+    <svg class="vought-shield" viewBox="0 0 60 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M30 2 L56 12 V32 C56 50 44 60 30 66 C16 60 4 50 4 32 V12 Z" fill="#0d1118" stroke="#c41e3a" stroke-width="2.5"/>
+      <path d="M30 9 L49 16.5 V32 C49 46 39.5 54.5 30 59.5 C20.5 54.5 11 46 11 32 V16.5 Z" fill="#161d28"/>
+      <path d="M30 16 L20 38 H27 L24 52 L40 30 H32 L36 16 Z" fill="#d4af37"/>
+    </svg>
+    <div>
+      <div class="vought-wordmark">VOUGHT<span>•</span>INTERNATIONAL</div>
+      <div class="vought-sub">O Único Lugar Que Te Protege™</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="live-dot"></div>
+    PORTAL SEGURO
+  </div>
+</div>
+
+<div class="stage">
+  <div class="login-card" id="loginCard">
+    <div class="card-eyebrow">Acesso Restrito</div>
+    <h1 class="card-title">Portal do Cidadão</h1>
+    <p class="card-desc">Entre com suas credenciais aprovadas pela Vought para acessar conteúdo exclusivo de Sete.</p>
+
+    <div class="field">
+      <label for="user">E-mail corporativo</label>
+      <input type="email" id="user" placeholder="seu.nome@vought.com" autocomplete="email">
+    </div>
+    <div class="field">
+      <label for="pass">Senha</label>
+      <input type="password" id="pass" placeholder="••••••••••" autocomplete="current-password">
+    </div>
+
+    <div class="row-between">
+      <label class="remember"><input type="checkbox"> Lembrar-me</label>
+      <a href="#" onclick="return false;">Esqueci minha senha</a>
+    </div>
+
+    <div class="captcha-box" id="captchaBox" tabindex="0" role="button" aria-label="Verificação de não-robô">
+      <div class="captcha-checkbox">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5L9 17.5L20 6.5" stroke="#06241a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="spinner"></div>
+      <div class="captcha-text">
+        <div class="ct-main" id="captchaMain">Não sou um robô (nem um superterapeuta)</div>
+        <div class="ct-sub" id="captchaSub">Clique para verificar sua humanidade</div>
+      </div>
+      <div class="captcha-logo">VOUGHT<b>VERIFY™</b></div>
+    </div>
+
+    <button class="btn-primary" id="loginBtn" disabled>Entrar no Portal</button>
+
+    <div class="card-footer-note">Não tem acesso? <b>Solicite seu crachá de Composto V</b> na recepção.</div>
+    <div class="disclaimer">Vought International não se responsabiliza por traumas, encobrimentos corporativos ou super-heróis fora de controle. Termos sujeitos a revisão pelo Departamento Jurídico.</div>
+  </div>
+</div>
+
+<!-- ===================== QUIZ MODAL ===================== -->
+<div class="modal-overlay" id="quizOverlay">
+  <div class="quiz-card" id="quizCard">
+
+    <div class="quiz-head">
+      <div class="quiz-head-title">TESTE DE VERIFICAÇÃO <span>VOUGHT</span></div>
+      <div class="quiz-progress-label" id="progressLabel">PERGUNTA 1/3</div>
+    </div>
+
+    <div class="timer-track">
+      <div class="timer-fill running" id="timerFill"></div>
+      <div class="timer-num" id="timerNum">6.0s</div>
+    </div>
+
+    <div class="quiz-body" id="quizBody">
+      <!-- injetado via JS -->
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* =================== DADOS DO QUIZ =================== */
+// Avatares ilustrativos em SVG (estilizados, não fotográficos) representando cada personagem.
+const avatars = {
+  homelander: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#0d1118"/>
+    <circle cx="50" cy="40" r="22" fill="#f2d9b1"/>
+    <path d="M28 36 Q50 8 72 36 L72 30 Q50 14 28 30 Z" fill="#e8c468"/>
+    <rect x="20" y="62" width="60" height="34" fill="#1c3f8f"/>
+    <path d="M50 62 L40 96 L60 96 Z" fill="#c41e3a"/>
+    <circle cx="50" cy="40" r="22" fill="none" stroke="#c41e3a" stroke-width="2" opacity="0.5"/>
+    <line x1="42" y1="36" x2="46" y2="40" stroke="#1a1a1a" stroke-width="2"/>
+    <line x1="58" y1="36" x2="54" y2="40" stroke="#1a1a1a" stroke-width="2"/>
+  </svg>`,
+  starlight: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#0d1118"/>
+    <circle cx="50" cy="38" r="20" fill="#f2d9b1"/>
+    <path d="M30 32 Q50 14 70 32 Q70 22 50 18 Q30 22 30 32 Z" fill="#6b4226"/>
+    <rect x="22" y="58" width="56" height="38" fill="#a8324a"/>
+    <path d="M50 8 L54 18 L64 18 L56 24 L59 34 L50 28 L41 34 L44 24 L36 18 L46 18 Z" fill="#d4af37"/>
+    <circle cx="50" cy="70" r="6" fill="#ffe9a8" opacity="0.85"/>
+  </svg>`,
+  butcher: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#0d1118"/>
+    <circle cx="50" cy="40" r="21" fill="#e0b78d"/>
+    <path d="M29 34 Q50 16 71 34 L71 28 Q50 12 29 28 Z" fill="#3a2a1a"/>
+    <rect x="40" y="52" width="20" height="10" fill="#e0b78d"/>
+    <rect x="18" y="60" width="64" height="36" fill="#2b2f33"/>
+    <rect x="30" y="60" width="40" height="10" fill="#54595e"/>
+    <path d="M40 50 Q50 58 60 50" stroke="#3a2a1a" stroke-width="3" fill="none"/>
+  </svg>`,
+  maeve: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#0d1118"/>
+    <circle cx="50" cy="38" r="20" fill="#e8c39a"/>
+    <path d="M29 30 Q50 10 71 30 Q71 50 64 56 Q68 36 50 28 Q32 36 36 56 Q29 50 29 30 Z" fill="#1a1410"/>
+    <rect x="20" y="58" width="60" height="38" fill="#5b1620"/>
+    <path d="M50 58 L42 96 L58 96 Z" fill="#d4af37"/>
+  </svg>`,
+  "queen-maeve": `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#0d1118"/>
+    <circle cx="50" cy="38" r="20" fill="#e8c39a"/>
+    <path d="M29 30 Q50 10 71 30 Q71 50 64 56 Q68 36 50 28 Q32 36 36 56 Q29 50 29 30 Z" fill="#1a1410"/>
+    <rect x="20" y="58" width="60" height="38" fill="#5b1620"/>
+    <path d="M50 58 L42 96 L58 96 Z" fill="#d4af37"/>
+  </svg>`,
+  "the-deep": `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#0d1118"/>
+    <circle cx="50" cy="40" r="21" fill="#cfe0e3"/>
+    <path d="M29 33 Q50 14 71 33 L71 27 Q50 10 29 27 Z" fill="#1a3a3f"/>
+    <rect x="18" y="60" width="64" height="36" fill="#0f5e66"/>
+    <path d="M18 70 Q30 60 42 70 Q54 80 66 70 Q78 60 82 70" stroke="#0a3a40" stroke-width="3" fill="none"/>
+    <circle cx="43" cy="40" r="3" fill="#0a2a2e"/>
+    <circle cx="57" cy="40" r="3" fill="#0a2a2e"/>
+  </svg>`,
+  hughie: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#0d1118"/>
+    <circle cx="50" cy="40" r="20" fill="#f0d6b0"/>
+    <path d="M30 33 Q50 16 70 33 L70 27 Q50 12 30 27 Z" fill="#4a3220"/>
+    <rect x="20" y="60" width="60" height="36" fill="#7a7a72"/>
+    <rect x="32" y="60" width="36" height="36" fill="#9c9c92"/>
+    <circle cx="44" cy="40" r="2.5" fill="#2a2a2a"/>
+    <circle cx="56" cy="40" r="2.5" fill="#2a2a2a"/>
+    <rect x="38" y="36" width="24" height="9" rx="4" fill="none" stroke="#2a2a2a" stroke-width="1.5"/>
+  </svg>`,
+  "a-train": `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#0d1118"/>
+    <circle cx="50" cy="40" r="20" fill="#9a6a45"/>
+    <rect x="18" y="60" width="64" height="36" fill="#c41e3a"/>
+    <path d="M30 90 L50 60 L70 90" stroke="#d4af37" stroke-width="3" fill="none"/>
+    <path d="M40 20 L60 20 L65 35 L50 32 L35 35 Z" fill="#1a1a1a"/>
+  </svg>`,
+  "black-noir": `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#0d1118"/>
+    <circle cx="50" cy="40" r="21" fill="#15171a"/>
+    <rect x="18" y="60" width="64" height="36" fill="#0e0f11"/>
+    <path d="M50 20 L70 40 L50 60 L30 40 Z" fill="#1d2024" opacity="0.6"/>
+    <circle cx="50" cy="40" r="21" fill="none" stroke="#2c3036" stroke-width="1.5"/>
+  </svg>`,
+  kimiko: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#0d1118"/>
+    <circle cx="50" cy="40" r="20" fill="#f0d6b8"/>
+    <path d="M29 32 Q50 12 71 32 Q71 46 66 50 Q70 30 50 26 Q30 30 34 50 Q29 46 29 32 Z" fill="#15110d"/>
+    <rect x="20" y="60" width="60" height="36" fill="#3a3a3a"/>
+    <circle cx="44" cy="40" r="2.5" fill="#2a2a2a"/>
+    <circle cx="56" cy="40" r="2.5" fill="#2a2a2a"/>
+  </svg>`,
+  stormfront: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#0d1118"/>
+    <circle cx="50" cy="38" r="20" fill="#f4e3c4"/>
+    <path d="M29 28 Q50 8 71 28 Q71 36 65 40 Q67 24 50 20 Q33 24 35 40 Q29 36 29 28 Z" fill="#e8e0c8"/>
+    <rect x="20" y="58" width="60" height="38" fill="#1c2a3a"/>
+    <path d="M40 14 L46 24 L36 24 Z M64 14 L70 24 L60 24 Z" fill="#9ad6ff" opacity="0.8"/>
+  </svg>`,
+  "soldier-boy": `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#0d1118"/>
+    <circle cx="50" cy="40" r="21" fill="#e8b98c"/>
+    <path d="M29 34 Q50 16 71 34 L71 28 Q50 12 29 28 Z" fill="#3a2a1a"/>
+    <rect x="18" y="60" width="64" height="36" fill="#2f4d2f"/>
+    <circle cx="50" cy="76" r="9" fill="#c41e3a"/>
+    <circle cx="50" cy="76" r="4" fill="#fff"/>
+  </svg>`
+};
+
+const ALL_QUESTIONS = [
+  {
+    char: "homelander",
+    q: "Quem é este indivíduo, capitão de Sete e dono de um sorriso que não chega aos olhos?",
+    sub: "Identifique o herói retratado.",
+    options: ["Homelander", "A-Train", "Black Noir", "Soldier Boy"],
+    correct: 0
+  },
+  {
+    char: "starlight",
+    q: "Ex-Capitã Estelar, hoje símbolo de resistência contra a Vought. Quem é ela?",
+    sub: "Identifique a personagem retratada.",
+    options: ["Stormfront", "Maeve", "Starlight (Annie January)", "Kimiko"],
+    correct: 2
+  },
+  {
+    char: "butcher",
+    q: "Líder do grupo que caça super-heróis corruptos, com um ódio pessoal por Homelander. Quem é?",
+    sub: "Identifique o personagem retratado.",
+    options: ["Hughie Campbell", "Billy Butcher", "Mother's Milk", "The Deep"],
+    correct: 1
+  },
+  {
+    char: "the-deep",
+    q: "Membro de Sete com poderes aquáticos e uma relação... peculiar com a vida marinha. Quem é?",
+    sub: "Identifique o personagem retratado.",
+    options: ["A-Train", "The Deep", "Black Noir", "Soldier Boy"],
+    correct: 1
+  },
+  {
+    char: "hughie",
+    q: "Rapaz comum que perdeu sua namorada em um acidente causado por A-Train. Quem é?",
+    sub: "Identifique o personagem retratado.",
+    options: ["Hughie Campbell", "Mother's Milk", "Frenchie", "Billy Butcher"],
+    correct: 0
+  },
+  {
+    char: "a-train",
+    q: "O herói mais rápido do mundo, membro de Sete, com vício em Composto V. Quem é?",
+    sub: "Identifique o personagem retratado.",
+    options: ["Soldier Boy", "Black Noir", "A-Train", "Homelander"],
+    correct: 2
+  },
+  {
+    char: "kimiko",
+    q: "Membro de The Boys com superforça e regeneração, geralmente silenciosa. Quem é?",
+    sub: "Identifique a personagem retratada.",
+    options: ["Starlight", "Kimiko", "Stormfront", "Maeve"],
+    correct: 1
+  },
+  {
+    char: "stormfront",
+    q: "Heroína recém-chegada a Sete com simpatias nazistas ocultas e poderes elétricos. Quem é?",
+    sub: "Identifique a personagem retratada.",
+    options: ["Stormfront", "Starlight", "Maeve", "Kimiko"],
+    correct: 0
+  },
+  {
+    char: "soldier-boy",
+    q: "Herói original da era da Guerra Fria, antecessor de Sete. Quem é?",
+    sub: "Identifique o personagem retratado.",
+    options: ["Black Noir", "A-Train", "Soldier Boy", "Homelander"],
+    correct: 2
+  },
+  {
+    char: "queen-maeve",
+    q: "Heroína veterana de Sete, cansada do circo corporativo da Vought. Quem é?",
+    sub: "Identifique a personagem retratada.",
+    options: ["Maeve (Rainha Maeve)", "Stormfront", "Starlight", "Kimiko"],
+    correct: 0
+  }
+];
+
+/* =================== ESTADO =================== */
+let quizQuestions = [];
+let currentQ = 0;
+let score = 0;
+let timerInterval = null;
+let timeLeft = 6;
+const TOTAL_TIME = 6;
+
+function shuffleArray(arr){
+  const a = [...arr];
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function pickQuestions(){
+  quizQuestions = shuffleArray(ALL_QUESTIONS).slice(0,3);
+}
+
+/* =================== CAPTCHA -> ABRE QUIZ =================== */
+const captchaBox = document.getElementById('captchaBox');
+const captchaMain = document.getElementById('captchaMain');
+const captchaSub = document.getElementById('captchaSub');
+const loginBtn = document.getElementById('loginBtn');
+let humanVerified = false;
+let captchaLoading = false;
+
+function activateCaptcha(){
+  if(humanVerified || captchaLoading) return;
+  captchaLoading = true;
+  captchaBox.classList.add('loading');
+  captchaSub.textContent = "Analisando padrões biométricos...";
+  setTimeout(() => {
+    captchaBox.classList.remove('loading');
+    captchaLoading = false;
+    openQuiz();
+  }, 850);
+}
+captchaBox.addEventListener('click', activateCaptcha);
+captchaBox.addEventListener('keydown', (e) => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); activateCaptcha(); } });
+
+loginBtn.addEventListener('click', () => {
+  if(loginBtn.disabled) return;
+  const card = document.getElementById('loginCard');
+  card.classList.add('shake');
+  setTimeout(() => card.classList.remove('shake'), 420);
+});
+
+/* =================== QUIZ =================== */
+const overlay = document.getElementById('quizOverlay');
+const quizBody = document.getElementById('quizBody');
+const progressLabel = document.getElementById('progressLabel');
+const timerFill = document.getElementById('timerFill');
+const timerNum = document.getElementById('timerNum');
+
+function openQuiz(){
+  pickQuestions();
+  currentQ = 0;
+  score = 0;
+  overlay.classList.add('open');
+  renderQuestion();
+}
+
+function closeQuiz(){
+  overlay.classList.remove('open');
+  clearInterval(timerInterval);
+}
+
+function renderQuestion(){
+  clearInterval(timerInterval);
+  const data = quizQuestions[currentQ];
+  progressLabel.textContent = `PERGUNTA ${currentQ+1}/3`;
+
+  const optionsHtml = data.options.map((opt,i) => `
+    <button class="opt-btn" data-idx="${i}">
+      <span class="opt-letter">${String.fromCharCode(65+i)}</span>
+      <span>${opt}</span>
+    </button>
+  `).join('');
+
+  quizBody.innerHTML = `
+    <div class="q-character-row">
+      <div class="q-avatar">${avatars[data.char] || ''}</div>
+      <div class="q-text">${data.q}<small>${data.sub}</small></div>
+    </div>
+    <div class="options">${optionsHtml}</div>
+    <div class="feedback-strip" id="feedbackStrip"></div>
+  `;
+
+  document.querySelectorAll('.opt-btn').forEach(btn => {
+    btn.addEventListener('click', () => handleAnswer(parseInt(btn.dataset.idx)));
+  });
+
+  startTimer();
+}
+
+function startTimer(){
+  timeLeft = TOTAL_TIME;
+  timerFill.style.transition = 'none';
+  timerFill.style.transform = 'scaleX(1)';
+  timerNum.textContent = `${timeLeft.toFixed(1)}s`;
+  // force reflow then animate
+  requestAnimationFrame(() => {
+    timerFill.style.transition = `transform ${TOTAL_TIME}s linear`;
+    timerFill.style.transform = 'scaleX(0)';
+  });
+
+  const startTime = Date.now();
+  timerInterval = setInterval(() => {
+    const elapsed = (Date.now() - startTime) / 1000;
+    const remaining = Math.max(0, TOTAL_TIME - elapsed);
+    timeLeft = remaining;
+    timerNum.textContent = `${remaining.toFixed(1)}s`;
+    if(remaining <= 0){
+      clearInterval(timerInterval);
+      handleAnswer(-1); // tempo esgotado
+    }
+  }, 100);
+}
+
+function handleAnswer(selectedIdx){
+  clearInterval(timerInterval);
+  const data = quizQuestions[currentQ];
+  const buttons = document.querySelectorAll('.opt-btn');
+  const strip = document.getElementById('feedbackStrip');
+
+  buttons.forEach((btn, i) => {
+    btn.classList.add('disabled');
+    if(i === data.correct) btn.classList.add('correct');
+    if(i === selectedIdx && selectedIdx !== data.correct) btn.classList.add('wrong');
+  });
+
+  const isCorrect = selectedIdx === data.correct;
+  if(isCorrect) score++;
+
+  strip.classList.add('show');
+  if(selectedIdx === -1){
+    strip.classList.add('fail');
+    strip.textContent = `⏱ Tempo esgotado! A resposta certa era "${data.options[data.correct]}".`;
+  } else if(isCorrect){
+    strip.classList.add('ok');
+    strip.textContent = `✓ Correto! Vought aprova sua lealdade.`;
+  } else {
+    strip.classList.add('fail');
+    strip.textContent = `✗ Errado. A resposta certa era "${data.options[data.correct]}".`;
+  }
+
+  setTimeout(() => {
+    currentQ++;
+    if(currentQ < quizQuestions.length){
+      renderQuestion();
+    } else {
+      renderResult();
+    }
+  }, 1400);
+}
+
+function renderResult(){
+  const passed = score >= 2;
+  progressLabel.textContent = "RESULTADO FINAL";
+  timerFill.style.transition = 'none';
+  timerFill.style.transform = 'scaleX(0)';
+  timerNum.textContent = "";
+
+  quizBody.innerHTML = `
+    <div class="result-wrap">
+      <div class="result-icon">${passed ? okIcon() : failIcon()}</div>
+      <div class="result-title" style="color:${passed ? 'var(--green-ok)' : 'var(--vought-red)'}">
+        ${passed ? 'IDENTIDADE CONFIRMADA' : 'VERIFICAÇÃO FALHOU'}
+      </div>
+      <div class="result-score">${score}<span> / 3 acertos</span></div>
+      <div class="result-sub">
+        ${passed
+          ? 'Parabéns, cidadão. Você demonstrou conhecimento suficiente sobre Sete para prosseguir. A Vought agradece sua lealdade contínua.'
+          : 'Seu conhecimento sobre Sete é insatisfatório. Recomendamos assistir mais conteúdo patrocinado pela Vought antes de tentar novamente.'}
+      </div>
+    </div>
+    <div class="quiz-footer" style="margin:16px -22px -22px;">
+      <button class="btn-ghost" id="retryBtn">Tentar de Novo</button>
+      <button class="btn-solid" id="continueBtn">${passed ? 'Continuar' : 'Fechar'}</button>
+    </div>
+  `;
+
+  document.getElementById('retryBtn').addEventListener('click', openQuiz);
+  document.getElementById('continueBtn').addEventListener('click', () => {
+    closeQuiz();
+    if(passed) markHumanVerified();
+  });
+}
+
+function markHumanVerified(){
+  humanVerified = true;
+  captchaBox.classList.add('verified');
+  captchaMain.textContent = "Verificado: definitivamente não é um robô";
+  captchaSub.textContent = "Identidade confirmada pela Vought Verify™";
+  loginBtn.disabled = false;
+}
+
+function okIcon(){
+  return `<svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="30" fill="rgba(62,207,142,.12)" stroke="#3ecf8e" stroke-width="2.5"/><path d="M18 33L27 42L46 22" stroke="#3ecf8e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+function failIcon(){
+  return `<svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="30" fill="rgba(196,30,58,.12)" stroke="#c41e3a" stroke-width="2.5"/><path d="M22 22L42 42M42 22L22 42" stroke="#c41e3a" stroke-width="4" stroke-linecap="round"/></svg>`;
+}
+
+// fechar clicando fora do card (opcional, não obrigatório p/ UX de captcha mas evita modal preso)
+overlay.addEventListener('click', (e) => {
+  if(e.target === overlay){
+    // não fecha sem responder propositalmente — mantém o "compromisso" do teste
+  }
+});
+</script>
+</body>
+</html>
